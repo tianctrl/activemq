@@ -5,6 +5,7 @@ import sys
 import os
 import shutil
 import re
+from distutils.dir_util import copy_tree
 
 
 ACTIVEMQ_HOME = "/opt/activemq"
@@ -197,10 +198,19 @@ class ServiceRun():
                   			            </authorizationMap>
                 		            </map>
               		             </authorizationPlugin>
-        	                     </plugins>\n"""
+        	                     </plugins> \n"""
             self.replace_all(ACTIVEMQ_CONF + "/activemq.xml", '</broker>', rightManagement + '</broker>')
 
-
+        enableConnector = "true"
+        if enableConnector == "true":
+            rightManagement = """<networkConnectors>
+          <networkConnector uri="k8s://default?podLabelKey=app&amp;podLabelValue=activemq"
+            dynamicOnly="true"
+            networkTTL="3"
+            prefetchSize="1"
+            decreaseNetworkConsumerPriority="true" />
+        </networkConnectors> \n"""
+            self.replace_all(ACTIVEMQ_CONF + "/activemq.xml", '</broker>', rightManagement + '</broker>')
 
         if (topics is not None and topics != "") or (queues is not None and queues != ""):
             staticRoute = "<destinations>\n"
@@ -307,7 +317,10 @@ if __name__ == '__main__':
         serviceRun.do_setting_activemq_log4j(os.getenv('ACTIVEMQ_LOGLEVEL'))
 
     # We set the main parameters
-    serviceRun.do_setting_activemq_main(os.getenv('ACTIVEMQ_NAME', 'localhost'), os.getenv('ACTIVEMQ_PENDING_MESSAGE_LIMIT', '1000'), os.getenv('ACTIVEMQ_STORAGE_USAGE', '100 gb'), os.getenv('ACTIVEMQ_TEMP_USAGE', '50 gb'), os.getenv('ACTIVEMQ_MAX_CONNECTION', '1000'), os.getenv('ACTIVEMQ_FRAME_SIZE', '104857600'), os.getenv('ACTIVEMQ_STATIC_TOPICS'), os.getenv('ACTIVEMQ_STATIC_QUEUES'), os.getenv('ACTIVEMQ_ENABLED_SCHEDULER', 'true'), os.getenv('ACTIVEMQ_ENABLED_AUTH', 'true'))
+    serviceRun.do_setting_activemq_main(os.getenv('ACTIVEMQ_NAME', os.getenv('HOSTNAME', 'localhost')), os.getenv('ACTIVEMQ_PENDING_MESSAGE_LIMIT', '1000'), os.getenv('ACTIVEMQ_STORAGE_USAGE', '100 gb'), os.getenv('ACTIVEMQ_TEMP_USAGE', '50 gb'), os.getenv('ACTIVEMQ_MAX_CONNECTION', '1000'), os.getenv('ACTIVEMQ_FRAME_SIZE', '104857600'), os.getenv('ACTIVEMQ_STATIC_TOPICS'), os.getenv('ACTIVEMQ_STATIC_QUEUES'), os.getenv('ACTIVEMQ_ENABLED_SCHEDULER', 'true'), os.getenv('ACTIVEMQ_ENABLED_AUTH', 'false'))
 
     # We setting wrapper
     serviceRun.do_setting_activemq_wrapper(os.getenv('ACTIVEMQ_MIN_MEMORY', '128'), os.getenv('ACTIVEMQ_MAX_MEMORY', '1024'))
+
+    # Copy the tree back over?
+    copy_tree(ACTIVEMQ_CONF, ACTIVEMQ_HOME + "/conf/")

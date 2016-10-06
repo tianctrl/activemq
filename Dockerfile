@@ -27,6 +27,9 @@ COPY assets/run.sh /app/run.sh
 RUN chmod +x /app/init.py
 RUN chmod +x /app/run.sh
 
+# Copy the Kubernetes discovery agent
+COPY assets/activemq-k8s-discovery-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/activemq/lib/
+
 # Expose all port
 EXPOSE 8161
 EXPOSE 61616
