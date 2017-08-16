@@ -201,10 +201,13 @@ class ServiceRun():
         	                     </plugins> \n"""
             self.replace_all(ACTIVEMQ_CONF + "/activemq.xml", '</broker>', rightManagement + '</broker>')
 
+        namespace = os.getenv("NAMESPACE", "default")
+        podLabelKey = os.getenv("PODLABELKEY", "app")
+        podLabelValue = os.getenv("PODLABELVALUE", "activemq")
         enableConnector = "true"
         if enableConnector == "true":
             rightManagement = """<networkConnectors>
-          <networkConnector uri="k8s://default?podLabelKey=app&amp;podLabelValue=activemq"
+          <networkConnector uri="k8s://""" + namespace + """?podLabelKey=""" + podLabelKey + """&amp;podLabelValue=""" + podLabelValue + """"
             dynamicOnly="true"
             networkTTL="3"
             prefetchSize="1"
